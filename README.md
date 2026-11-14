@@ -10,7 +10,10 @@ npm run dev          # browser, http://localhost:5173
 npm run electron:dev # desktop app with hot reload
 npm run electron     # build, then open the desktop app
 npm test
+npm run deploy       # test, build and publish to GitHub Pages (gh-pages branch)
 ```
+
+Live site: https://kaseris.github.io/champions-ev-converter/
 
 ## Conversion
 

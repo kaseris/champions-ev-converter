@@ -10,11 +10,13 @@
     "preview": "vite preview",
     "test": "vitest run",
     "electron": "npm run build && electron .",
-    "electron:dev": "concurrently -k \"vite --port 5173 --strictPort\" \"wait-on tcp:5173 && ELECTRON_DEV_URL=http://localhost:5173 electron .\""
+    "electron:dev": "concurrently -k \"vite --port 5173 --strictPort\" \"wait-on tcp:5173 && ELECTRON_DEV_URL=http://localhost:5173 electron .\"",
+    "deploy": "npm test && npm run build && gh-pages -d dist --nojekyll"
   },
   "devDependencies": {
     "concurrently": "^10.0.7",
     "electron": "^45.3.2",
+    "gh-pages": "^6.3.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",
     "vitest": "^5.1.0",
