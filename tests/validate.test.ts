@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parse_team } from '../src/paste'
 import { suggest, validate_set } from '../src/validate'
-import { DEX } from './fixtures'
+import { DEX, LEARNSETS } from './fixtures'
 
 const check = (text: string, dex = DEX) => validate_set(parse_team(text)[0], dex)
 
@@ -83,5 +83,38 @@ describe('suggest', () => {
   it('allows more typos for longer names', () => {
     expect(suggest('Urshfu-Rapd-Strike', ['Urshifu-Rapid-Strike'])).toBe('Urshifu-Rapid-Strike')
     expect(suggest('Xyz', ['Fake Out'])).toBeNull()
+  })
+})
+
+describe('learnable moves', () => {
+  const learn = (text: string) => validate_set(parse_team(text)[0], DEX, LEARNSETS)
+
+  it('accepts moves learned by the species or its pre-evolutions', () => {
+    expect(learn('Incineroar\n- Fake Out\n- Parting Shot\n- Knock Off\n- Protect')).toEqual({ errors: [], warnings: [] })
+  })
+
+  it('warns, not errors, about moves outside the move pool', () => {
+    expect(learn('Garchomp-Mega\n- Earthquake\n- Spore')).toEqual({
+      errors: [],
+      warnings: ['Garchomp-Mega may not be able to learn Spore in Scarlet/Violet.']
+    })
+  })
+
+  it('names the fallback when only older generations have data', () => {
+    expect(learn('Oldmon\n- Thunderbolt').warnings).toEqual(['Oldmon may not be able to learn Thunderbolt in any game.'])
+  })
+
+  it('treats Hidden Power types as Hidden Power', () => {
+    expect(learn('Oldmon\n- Hidden Power [Fire]').warnings).toEqual([
+      'Oldmon may not be able to learn Hidden Power Fire in any game.'
+    ])
+  })
+
+  it('skips the check when the species has no learnset data', () => {
+    expect(learn('Urshifu-Rapid-Strike\n- Spore').warnings).toEqual([])
+  })
+
+  it('skips the check until learnsets have loaded', () => {
+    expect(check('Garchomp\n- Spore').warnings).toEqual([])
   })
 })

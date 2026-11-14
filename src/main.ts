@@ -1,7 +1,7 @@
 import './style.css'
 import { MAX_EV_PER_STAT, MAX_EV_TOTAL, MAX_SP_PER_STAT, MAX_SP_TOTAL, STATS, convert_spread, total, with_notes, type ConversionResult, type Direction, type Spread, type Stat } from './convert'
 import { EXTRA_FIELDS, LANGUAGES, OT_GENDERS, extras_to_lines, is_shiny, merge_extras, validate_extras, type ExtraField, type Extras, type IdFormat } from './extras'
-import { load_dex, type Dex } from './dex'
+import { load_dex, load_learnsets, type Dex, type Learnsets } from './dex'
 import { enhance_select } from './dropdown'
 import { set_sprite, sprite_image } from './sprites'
 import { validate_set } from './validate'
@@ -29,6 +29,7 @@ let imported_spreads: Spread[] = []
 let spread_editors: SpreadEditor[] = []
 let mon_rows: HTMLTableRowElement[] = []
 let dex: Dex | null = null
+let learnsets: Learnsets | null = null
 
 interface SpreadEditor {
   inputs: Record<Stat, HTMLInputElement>
@@ -192,7 +193,7 @@ function update_spread_editor(editor: SpreadEditor, spread: Spread, imported: Sp
 
 const STATUS_BADGES = {
   ok: { icon: '✓', label: 'OK' },
-  warning: { icon: '!', label: 'Adjusted' },
+  warning: { icon: '!', label: 'Warning' },
   error: { icon: '✕', label: 'Invalid' }
 } as const
 
@@ -230,7 +231,7 @@ function render() {
   element('output-unit').textContent = dir === 'champions_to_regular' ? 'Regular EVs' : 'Champions SP'
   const counts = { ok: 0, warning: 0, error: 0 }
   const sets = team.map((set, index) => {
-    const result = with_notes(convert_spread(set.spread, dir), validate_set(set, dex))
+    const result = with_notes(convert_spread(set.spread, dir), validate_set(set, dex, learnsets))
     const cells = mon_rows[index].cells
     update_spread_editor(spread_editors[index], set.spread, imported_spreads[index], dir)
     cells[2].textContent = spread_text(format_spread_line(result.spread), unit.to, total(result.spread))
@@ -247,7 +248,7 @@ function render() {
   const notes = element('output-notes')
   const parts = [
     counts.error && `${counts.error} invalid`,
-    counts.warning && `${counts.warning} adjusted`
+    counts.warning && `${counts.warning} with warnings`
   ].filter(Boolean)
   notes.className = counts.error ? 'error' : 'warning'
   notes.textContent = parts.length
@@ -264,15 +265,26 @@ async function fetch_text(url: string): Promise<string> {
 
 // Names are checked against Showdown's data once it has loaded; until then only format checks run
 function ensure_dex() {
-  if (dex) return
-  load_dex()
-    .then(loaded => {
-      dex = loaded
-      render()
-    })
-    .catch(() => {
-      import_status.textContent += " Couldn't load Pokémon data from Showdown, so names weren't checked."
-    })
+  if (!dex) {
+    load_dex()
+      .then(loaded => {
+        dex = loaded
+        render()
+      })
+      .catch(() => {
+        import_status.textContent += " Couldn't load Pokémon data from Showdown, so names weren't checked."
+      })
+  }
+  if (!learnsets) {
+    load_learnsets()
+      .then(loaded => {
+        learnsets = loaded
+        render()
+      })
+      .catch(() => {
+        import_status.textContent += " Couldn't load learnsets, so learnable moves weren't checked."
+      })
+  }
 }
 
 async function import_team() {

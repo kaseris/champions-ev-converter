@@ -1,4 +1,4 @@
-import type { Dex } from './dex'
+import { learnset_move_id, move_pool, type Dex, type Learnsets } from './dex'
 import { invalid_spread_parts, type PokemonSet } from './paste'
 import { to_id } from './sprites'
 
@@ -63,11 +63,12 @@ function find(list: string[], value: string): string | undefined {
   return list.find(item => to_id(item) === to_id(value))
 }
 
-export function validate_set(set: PokemonSet, dex: Dex | null): Validation {
+export function validate_set(set: PokemonSet, dex: Dex | null, learnsets: Learnsets | null = null): Validation {
   const errors: string[] = []
   const warnings: string[] = []
   const species = dex?.species.get(to_id(set.species))
   const item = set.header.split(' @ ')[1]?.trim()
+  const pool = dex && learnsets && species ? move_pool(dex, learnsets, to_id(species.name)) : null
 
   if (dex && !species) errors.push(`Unknown Pokémon "${set.species}".${hint(set.species, [...dex.species.values()].map(entry => entry.name))}`)
   if (dex && item && !dex.items.has(to_id(item))) errors.push(`Unknown item "${item}".${hint(item, dex.items.values())}`)
@@ -78,7 +79,13 @@ export function validate_set(set: PokemonSet, dex: Dex | null): Validation {
     if (line.startsWith('-')) {
       if (!dex) continue
       for (const move of line.slice(1).split('/').map(part => part.trim()).filter(Boolean)) {
-        if (!dex.moves.has(to_id(move))) errors.push(`Unknown move "${move}".${hint(move, dex.moves.values())}`)
+        if (!dex.moves.has(to_id(move))) {
+          errors.push(`Unknown move "${move}".${hint(move, dex.moves.values())}`)
+        } else if (pool && !pool.moves.has(learnset_move_id(to_id(move)))) {
+          // Only a hint: PKHeX's legality check is the authority on what a Pokémon can learn
+          const where = pool.gen9 ? 'in Scarlet/Violet' : 'in any game'
+          warnings.push(`${species!.name} may not be able to learn ${dex.moves.get(to_id(move))} ${where}.`)
+        }
       }
       continue
     }
