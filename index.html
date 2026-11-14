@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://play.pokemonshowdown.com; connect-src 'self' https://pokepast.es ws://localhost:5173" />
+    <title>Champions EV Converter</title>
+    <script type="module" crossorigin src="./assets/index-YTXUrzXD.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CNqIescB.css">
+  </head>
+  <body>
+    <main>
+      <h1>Champions EV Converter</h1>
+
+      <div class="workspace">
+        <section class="panel">
+          <h2>
+            <label for="source">Import</label>
+          </h2>
+          <textarea id="source"
+                    rows="18"
+                    placeholder="https://pokepast.es/... or paste Showdown text"></textarea>
+          <div class="actions">
+            <button id="import"
+                    type="button"
+                    class="primary">
+              Import
+            </button>
+            <span id="import-status"
+                  role="status"></span>
+          </div>
+          <div id="team-sprites"
+               class="sprite-strip"></div>
+
+          <fieldset class="segmented">
+            <legend>Convert</legend>
+            <div class="segments">
+              <label>
+                <input type="radio"
+                       name="direction"
+                       value="champions_to_regular"
+                       checked />
+                <span>Champions SP → Regular EVs</span>
+              </label>
+              <label>
+                <input type="radio"
+                       name="direction"
+                       value="regular_to_champions" />
+                <span>Regular EVs → Champions SP</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <label class="switch">
+            <input id="remove-items"
+                   type="checkbox"
+                   role="switch" />
+            <span class="switch-track"
+                  aria-hidden="true"></span>
+            Remove held items
+          </label>
+        </section>
+
+        <section class="panel">
+          <h2>
+            <label for="output">Export</label>
+            <span id="output-unit"
+                  class="muted">Regular EVs</span>
+          </h2>
+          <textarea id="output"
+                    rows="18"
+                    readonly
+                    placeholder="Converted team appears here"></textarea>
+          <div class="actions">
+            <button id="copy"
+                    type="button"
+                    class="primary">
+              Copy
+            </button>
+            <button id="download"
+                    type="button">
+              Download .txt
+            </button>
+          </div>
+          <p id="output-notes"
+             class="warning"
+             role="status"></p>
+        </section>
+      </div>
+
+      <section>
+        <h2>Team</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Pokémon</th>
+                <th>Original</th>
+                <th>Converted</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="team-rows">
+              <tr>
+                <td colspan="4">No team imported yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <details>
+          <summary>Trainer details (optional, applies to every Pokémon)</summary>
+          <label for="id-format">ID format</label>
+          <select id="id-format">
+            <option value="gen7">Gen 7+ (SM, SwSh, BDSP, PLA, SV) – 6-digit TID, 4-digit SID</option>
+            <option value="gen3">Gen 3–6 – TID/SID 0–65535</option>
+          </select>
+          <div id="team-extras"
+               class="extras"></div>
+          <p id="extras-errors"
+             class="error"></p>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>
