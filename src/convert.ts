@@ -8,9 +8,19 @@ export const MAX_SP_TOTAL = 66
 export const MAX_EV_PER_STAT = 252
 export const MAX_EV_TOTAL = 510
 
+export type ConversionStatus = 'ok' | 'warning' | 'error'
+
+// warnings: the converter fixed something (rounding, clipping); errors: the input spread itself is invalid
 export interface ConversionResult {
   spread: Spread
   warnings: string[]
+  errors: string[]
+  status: ConversionStatus
+}
+
+function result(spread: Spread, warnings: string[], errors: string[]): ConversionResult {
+  const status: ConversionStatus = errors.length ? 'error' : warnings.length ? 'warning' : 'ok'
+  return { spread, warnings, errors, status }
 }
 
 export function empty_spread(): Spread {
@@ -78,25 +88,27 @@ function clip_sp(spread: Spread, warnings: string[]): Spread {
 
 export function convert_spread(input: Spread, direction: Direction): ConversionResult {
   const warnings: string[] = []
+  const errors: string[] = []
   const spread = empty_spread()
+  if (total(input) === 0) errors.push('No spread found: every stat is 0.')
 
   if (direction === 'champions_to_regular') {
     for (const stat of STATS) {
       if (input[stat] > MAX_SP_PER_STAT) {
-        warnings.push(`${stat}: ${input[stat]} SP is above the ${MAX_SP_PER_STAT} per-stat cap, treated as ${MAX_SP_PER_STAT}.`)
+        errors.push(`${stat}: ${input[stat]} SP is above the ${MAX_SP_PER_STAT} per-stat cap, treated as ${MAX_SP_PER_STAT}.`)
       }
       spread[stat] = sp_to_ev(input[stat])
     }
     if (total(input) > MAX_SP_TOTAL) {
-      warnings.push(`Input has ${total(input)} SP, more than the ${MAX_SP_TOTAL} Champions allows.`)
+      errors.push(`Input has ${total(input)} SP, more than the ${MAX_SP_TOTAL} Champions allows.`)
     }
-    return { spread: total(spread) > MAX_EV_TOTAL ? clip_evs(spread, warnings) : spread, warnings }
+    return result(total(spread) > MAX_EV_TOTAL ? clip_evs(spread, warnings) : spread, warnings, errors)
   }
 
   const wasted: string[] = []
   for (const stat of STATS) {
     if (input[stat] > MAX_EV_PER_STAT) {
-      warnings.push(`${stat}: ${input[stat]} EVs is above the ${MAX_EV_PER_STAT} per-stat cap, treated as ${MAX_EV_PER_STAT}.`)
+      errors.push(`${stat}: ${input[stat]} EVs is above the ${MAX_EV_PER_STAT} per-stat cap, treated as ${MAX_EV_PER_STAT}.`)
     }
     spread[stat] = ev_to_sp(input[stat])
     const used = sp_to_ev(spread[stat])
@@ -107,7 +119,7 @@ export function convert_spread(input: Spread, direction: Direction): ConversionR
     warnings.push(`EVs not on an SP boundary were rounded: ${wasted.join(', ')}.`)
   }
   if (total(input) > MAX_EV_TOTAL) {
-    warnings.push(`Input has ${total(input)} EVs, more than the ${MAX_EV_TOTAL} regular games allow.`)
+    errors.push(`Input has ${total(input)} EVs, more than the ${MAX_EV_TOTAL} regular games allow.`)
   }
-  return { spread: total(spread) > MAX_SP_TOTAL ? clip_sp(spread, warnings) : spread, warnings }
+  return result(total(spread) > MAX_SP_TOTAL ? clip_sp(spread, warnings) : spread, warnings, errors)
 }

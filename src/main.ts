@@ -1,5 +1,5 @@
 import './style.css'
-import { convert_spread, total, type Direction } from './convert'
+import { MAX_EV_PER_STAT, MAX_EV_TOTAL, MAX_SP_PER_STAT, MAX_SP_TOTAL, STATS, convert_spread, total, type ConversionResult, type Direction, type Spread, type Stat } from './convert'
 import { EXTRA_FIELDS, LANGUAGES, OT_GENDERS, extras_to_lines, is_shiny, merge_extras, validate_extras, type ExtraField, type Extras, type IdFormat } from './extras'
 import { enhance_select } from './dropdown'
 import { set_sprite, sprite_image } from './sprites'
@@ -23,6 +23,15 @@ let team: PokemonSet[] = []
 let overrides: Extras[] = []
 let strip_sprites: HTMLImageElement[] = []
 let row_sprites: HTMLImageElement[] = []
+let imported_spreads: Spread[] = []
+let spread_editors: SpreadEditor[] = []
+let mon_rows: HTMLTableRowElement[] = []
+
+interface SpreadEditor {
+  inputs: Record<Stat, HTMLInputElement>
+  total: HTMLSpanElement
+  reset: HTMLButtonElement
+}
 const team_extras: Extras = {}
 
 const FIELD_OPTIONS: Partial<Record<ExtraField, string[]>> = {
@@ -75,6 +84,50 @@ function build_sprite_strip() {
   element('team-sprites').replaceChildren(...strip_sprites)
 }
 
+function build_spread_editor(set: PokemonSet, index: number): HTMLDivElement {
+  const wrapper = document.createElement('div')
+  const grid = document.createElement('div')
+  grid.className = 'spread-editor'
+  const inputs = {} as Record<Stat, HTMLInputElement>
+  for (const stat of STATS) {
+    const label = document.createElement('label')
+    label.className = 'stat-field'
+    const name = document.createElement('span')
+    name.textContent = stat
+    const input = document.createElement('input')
+    input.type = 'number'
+    input.min = '0'
+    input.step = '1'
+    input.inputMode = 'numeric'
+    input.value = String(set.spread[stat])
+    input.setAttribute('aria-label', `${set.species} ${stat}`)
+    input.addEventListener('input', () => {
+      const value = Math.floor(Number(input.value))
+      set.spread[stat] = Number.isFinite(value) && value > 0 ? value : 0
+      render()
+    })
+    label.append(name, input)
+    grid.append(label)
+    inputs[stat] = input
+  }
+  const footer = document.createElement('div')
+  footer.className = 'spread-footer'
+  const total_label = document.createElement('span')
+  const reset = document.createElement('button')
+  reset.type = 'button'
+  reset.className = 'link-button'
+  reset.textContent = 'Reset'
+  reset.addEventListener('click', () => {
+    set.spread = { ...imported_spreads[index] }
+    for (const stat of STATS) inputs[stat].value = String(set.spread[stat])
+    render()
+  })
+  footer.append(total_label, reset)
+  wrapper.append(grid, footer)
+  spread_editors[index] = { inputs, total: total_label, reset }
+  return wrapper
+}
+
 function build_rows() {
   build_sprite_strip()
   team_rows.replaceChildren()
@@ -84,6 +137,8 @@ function build_rows() {
   }
   team.forEach((set, index) => {
     const row = team_rows.insertRow()
+    row.className = 'mon-row'
+    mon_rows[index] = row
     const name_cell = row.insertCell()
     const name = document.createElement('div')
     name.className = 'mon-name'
@@ -98,16 +153,64 @@ function build_rows() {
     const fields = document.createElement('div')
     fields.className = 'extras'
     build_extras_fields(fields, overrides[index], 'Team default')
-    details.append(summary, fields)
+    details.append(summary)
     name_cell.append(details)
+    row.insertCell().append(build_spread_editor(set, index))
     row.insertCell()
     row.insertCell()
-    row.insertCell()
+    // Override fields span the whole table width so they lay out horizontally instead of stretching the row
+    const override_row = team_rows.insertRow()
+    override_row.className = 'override-row'
+    override_row.hidden = true
+    const override_cell = override_row.insertCell()
+    override_cell.colSpan = 4
+    override_cell.append(fields)
+    details.addEventListener('toggle', () => (override_row.hidden = !details.open))
   })
 }
 
 function spread_text(line: string | null, unit: string, amount: number) {
   return `${line?.replace('EVs: ', '') ?? 'none'} (${amount} ${unit})`
+}
+
+function update_spread_editor(editor: SpreadEditor, spread: Spread, imported: Spread, dir: Direction) {
+  const is_sp = dir === 'champions_to_regular'
+  const per_stat = is_sp ? MAX_SP_PER_STAT : MAX_EV_PER_STAT
+  const max_total = is_sp ? MAX_SP_TOTAL : MAX_EV_TOTAL
+  for (const stat of STATS) {
+    editor.inputs[stat].max = String(per_stat)
+    editor.inputs[stat].classList.toggle('over', spread[stat] > per_stat)
+  }
+  const amount = total(spread)
+  editor.total.textContent = `${amount} / ${max_total} ${units(dir).from}`
+  editor.total.classList.toggle('warning', amount > max_total)
+  editor.reset.hidden = STATS.every(stat => spread[stat] === imported[stat])
+}
+
+const STATUS_BADGES = {
+  ok: { icon: '✓', label: 'OK' },
+  warning: { icon: '!', label: 'Adjusted' },
+  error: { icon: '✕', label: 'Invalid spread' }
+} as const
+
+function render_notes(cell: HTMLTableCellElement, result: ConversionResult) {
+  const badge = document.createElement('div')
+  badge.className = `status status-${result.status}`
+  const icon = document.createElement('span')
+  icon.className = 'status-icon'
+  icon.setAttribute('aria-hidden', 'true')
+  icon.textContent = STATUS_BADGES[result.status].icon
+  badge.append(icon, STATUS_BADGES[result.status].label)
+  const messages = [
+    ...result.errors.map(text => ({ text, level: 'error' })),
+    ...result.warnings.map(text => ({ text, level: 'warning' }))
+  ].map(({ text, level }) => {
+    const line = document.createElement('div')
+    line.className = `note ${level}`
+    line.textContent = text
+    return line
+  })
+  cell.replaceChildren(badge, ...messages)
 }
 
 function render() {
@@ -122,20 +225,14 @@ function render() {
   const unit = units(dir)
   const remove_items = element<HTMLInputElement>('remove-items').checked
   element('output-unit').textContent = dir === 'champions_to_regular' ? 'Regular EVs' : 'Champions SP'
-  let flagged = 0
+  const counts = { ok: 0, warning: 0, error: 0 }
   const sets = team.map((set, index) => {
     const result = convert_spread(set.spread, dir)
-    const cells = team_rows.rows[index].cells
-    cells[1].textContent = spread_text(format_spread_line(set.spread), unit.from, total(set.spread))
+    const cells = mon_rows[index].cells
+    update_spread_editor(spread_editors[index], set.spread, imported_spreads[index], dir)
     cells[2].textContent = spread_text(format_spread_line(result.spread), unit.to, total(result.spread))
-    cells[3].replaceChildren(...result.warnings.map(warning => {
-      const line = document.createElement('div')
-      line.className = 'warning'
-      line.textContent = `⚠ ${warning}`
-      return line
-    }))
-    if (!result.warnings.length) cells[3].textContent = 'OK'
-    if (result.warnings.length) flagged++
+    render_notes(cells[3], result)
+    counts[result.status]++
     const extras = merge_extras(team_extras, overrides[index])
     const shiny = is_shiny(extras, set.lines)
     set_sprite(strip_sprites[index], set.species, shiny)
@@ -144,8 +241,14 @@ function render() {
     return serialize_set(set, result.spread, extra_lines, remove_items)
   })
   output.value = sets.join('\n\n')
-  element('output-notes').textContent = flagged
-    ? `⚠ ${flagged} of ${team.length} Pokémon were adjusted. See the notes in the Team table below.`
+  const notes = element('output-notes')
+  const parts = [
+    counts.error && `${counts.error} invalid`,
+    counts.warning && `${counts.warning} adjusted`
+  ].filter(Boolean)
+  notes.className = counts.error ? 'error' : 'warning'
+  notes.textContent = parts.length
+    ? `${counts.error ? '✕' : '⚠'} ${parts.join(', ')} of ${team.length} Pokémon. See the notes in the Team table below.`
     : ''
 }
 
@@ -171,6 +274,7 @@ async function import_team() {
   }
   team = parse_team(text)
   overrides = team.map(() => ({}))
+  imported_spreads = team.map(set => ({ ...set.spread }))
   import_status.textContent = team.length ? `Imported ${team.length} Pokémon.` : 'No Pokémon found in the input.'
   build_rows()
   render()

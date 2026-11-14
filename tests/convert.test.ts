@@ -59,3 +59,31 @@ describe('regular to champions', () => {
     expect(result.warnings.some(w => /exceeds the 66/.test(w))).toBe(true)
   })
 })
+
+describe('status', () => {
+  it('is ok when nothing changes', () => {
+    const result = convert_spread(spread({ HP: 32, Atk: 32, Spe: 1 }), 'champions_to_regular')
+    expect(result.status).toBe('ok')
+    expect(result.errors).toEqual([])
+  })
+
+  it('is warning when the converter clips or rounds', () => {
+    expect(convert_spread(spread({ HP: 32, Atk: 32, Spe: 2 }), 'champions_to_regular').status).toBe('warning')
+    expect(convert_spread(spread({ HP: 248, Def: 8 }), 'regular_to_champions').status).toBe('warning')
+  })
+
+  it('is error when the input spread breaks its own limits', () => {
+    const over_stat = convert_spread(spread({ SpD: 40 }), 'champions_to_regular')
+    expect(over_stat.status).toBe('error')
+    expect(over_stat.errors[0]).toMatch(/SpD: 40 SP is above/)
+    const over_total = convert_spread(spread({ HP: 252, Atk: 252, Def: 252 }), 'regular_to_champions')
+    expect(over_total.status).toBe('error')
+    expect(over_total.errors.some(e => /756 EVs/.test(e))).toBe(true)
+  })
+
+  it('is error when there is no spread at all', () => {
+    const result = convert_spread(empty_spread(), 'champions_to_regular')
+    expect(result.status).toBe('error')
+    expect(result.errors[0]).toMatch(/No spread found/)
+  })
+})
