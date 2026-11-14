@@ -1,6 +1,8 @@
 import './style.css'
 import { convert_spread, total, type Direction } from './convert'
-import { EXTRA_FIELDS, LANGUAGES, OT_GENDERS, extras_to_lines, merge_extras, validate_extras, type ExtraField, type Extras, type IdFormat } from './extras'
+import { EXTRA_FIELDS, LANGUAGES, OT_GENDERS, extras_to_lines, is_shiny, merge_extras, validate_extras, type ExtraField, type Extras, type IdFormat } from './extras'
+import { enhance_select } from './dropdown'
+import { set_sprite, sprite_image } from './sprites'
 import { format_spread_line, parse_team, pokepaste_raw_url, serialize_set, type PokemonSet } from './paste'
 
 declare global {
@@ -19,6 +21,8 @@ const extras_errors = element<HTMLParagraphElement>('extras-errors')
 
 let team: PokemonSet[] = []
 let overrides: Extras[] = []
+let strip_sprites: HTMLImageElement[] = []
+let row_sprites: HTMLImageElement[] = []
 const team_extras: Extras = {}
 
 const FIELD_OPTIONS: Partial<Record<ExtraField, string[]>> = {
@@ -54,6 +58,7 @@ function build_extras_fields(container: HTMLElement, target: Extras, placeholder
     })
     label.append(input)
     container.append(label)
+    if (input instanceof HTMLSelectElement) enhance_select(input)
   }
 }
 
@@ -65,7 +70,13 @@ function units(dir: Direction) {
   return dir === 'champions_to_regular' ? { from: 'SP', to: 'EVs' } : { from: 'EVs', to: 'SP' }
 }
 
+function build_sprite_strip() {
+  strip_sprites = team.map(set => sprite_image(set.species, 72))
+  element('team-sprites').replaceChildren(...strip_sprites)
+}
+
 function build_rows() {
+  build_sprite_strip()
   team_rows.replaceChildren()
   if (!team.length) {
     team_rows.innerHTML = '<tr><td colspan="4">No team imported yet.</td></tr>'
@@ -74,7 +85,11 @@ function build_rows() {
   team.forEach((set, index) => {
     const row = team_rows.insertRow()
     const name_cell = row.insertCell()
-    name_cell.textContent = set.species
+    const name = document.createElement('div')
+    name.className = 'mon-name'
+    row_sprites[index] = sprite_image(set.species, 48)
+    name.append(row_sprites[index], set.species)
+    name_cell.append(name)
     const details = document.createElement('details')
     const summary = document.createElement('summary')
     summary.textContent = 'Override trainer details'
@@ -121,7 +136,11 @@ function render() {
     }))
     if (!result.warnings.length) cells[3].textContent = 'OK'
     if (result.warnings.length) flagged++
-    const extra_lines = extras_to_lines(merge_extras(team_extras, overrides[index]))
+    const extras = merge_extras(team_extras, overrides[index])
+    const shiny = is_shiny(extras, set.lines)
+    set_sprite(strip_sprites[index], set.species, shiny)
+    set_sprite(row_sprites[index], set.species, shiny)
+    const extra_lines = extras_to_lines(extras)
     return serialize_set(set, result.spread, extra_lines, remove_items)
   })
   output.value = sets.join('\n\n')
@@ -167,6 +186,7 @@ function download() {
 }
 
 build_extras_fields(element('team-extras'), team_extras)
+enhance_select(element('id-format'))
 element('import').addEventListener('click', import_team)
 element('id-format').addEventListener('change', render)
 element('remove-items').addEventListener('change', render)

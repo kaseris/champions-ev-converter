@@ -43,3 +43,8 @@ export function validate_extras(extras: Extras, id_format: IdFormat = 'gen7'): s
   if ((extras.OT?.trim().length ?? 0) > 12) errors.push('OT is longer than 12 characters.')
   return errors
 }
+
+// Shiny can come from the trainer details or from a 'Shiny: Yes' line already in the paste
+export function is_shiny(extras: Extras, set_lines: string[]): boolean {
+  return extras.Shiny?.trim().toLowerCase() === 'yes' || set_lines.some(line => /^shiny:\s*yes$/i.test(line))
+}

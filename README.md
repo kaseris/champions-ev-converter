@@ -23,3 +23,7 @@ npm test
 OT, OTGender, TID, SID, Language, Ball and Shiny are written as `Key: Value` lines (Auto-Legality Mod format), team-wide or per Pokémon. Empty fields are left out.
 
 Fetching a pokepast.es URL works in the desktop app. In a browser the request may be blocked by CORS; paste the text instead.
+
+## Sprites
+
+Team sprites are loaded at runtime from Pokémon Showdown's sprite server (`play.pokemonshowdown.com/sprites/home/`, the 2D Pokémon HOME renders), falling back to `/sprites/gen5/`. Nothing is bundled with the app, so sprites need an internet connection. Dedicated Pokémon Champions sprites exist on Bulbagarden Archives, but that host blocks automated access, so they aren't used.

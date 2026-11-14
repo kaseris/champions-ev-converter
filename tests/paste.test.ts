@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { convert_spread } from '../src/convert'
-import { extras_to_lines, merge_extras, validate_extras } from '../src/extras'
+import { extras_to_lines, is_shiny, merge_extras, validate_extras } from '../src/extras'
 import { parse_species, parse_team, pokepaste_raw_url, serialize_set } from '../src/paste'
 
 const TEAM = `Incineroar @ Sitrus Berry
@@ -62,6 +62,13 @@ Careful Nature
     const text = serialize_set(chomp, chomp.spread, [], true)
     expect(text.split('\n')[0]).toBe('Chompy (Garchomp) (F)')
     expect(serialize_set(chomp, chomp.spread, []).split('\n')[0]).toBe('Chompy (Garchomp) (F) @ Life Orb')
+  })
+
+  it('detects shiny from trainer details or the paste itself', () => {
+    expect(is_shiny(merge_extras({}, { Shiny: 'Yes' }), [])).toBe(true)
+    expect(is_shiny(merge_extras({ Shiny: 'Yes' }, {}), [])).toBe(true)
+    expect(is_shiny({}, ['Ability: Intimidate', 'Shiny: Yes'])).toBe(true)
+    expect(is_shiny({}, ['Ability: Intimidate'])).toBe(false)
   })
 
   it('omits empty extras', () => {

@@ -5,7 +5,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://pokepast.es ws://localhost:5173" />
+          content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://play.pokemonshowdown.com; connect-src 'self' https://pokepast.es ws://localhost:5173" />
     <title>Champions EV Converter</title>
   </head>
   <body>
@@ -29,27 +29,34 @@
             <span id="import-status"
                   role="status"></span>
           </div>
+          <div id="team-sprites"
+               class="sprite-strip"></div>
 
-          <fieldset>
-            <legend>Paste uses</legend>
-            <label>
-              <input type="radio"
-                     name="direction"
-                     value="champions_to_regular"
-                     checked />
-              Champions stat points → convert to regular EVs
-            </label>
-            <label>
-              <input type="radio"
-                     name="direction"
-                     value="regular_to_champions" />
-              Regular EVs → convert to Champions stat points
-            </label>
+          <fieldset class="segmented">
+            <legend>Convert</legend>
+            <div class="segments">
+              <label>
+                <input type="radio"
+                       name="direction"
+                       value="champions_to_regular"
+                       checked />
+                <span>Champions SP → Regular EVs</span>
+              </label>
+              <label>
+                <input type="radio"
+                       name="direction"
+                       value="regular_to_champions" />
+                <span>Regular EVs → Champions SP</span>
+              </label>
+            </div>
           </fieldset>
 
-          <label>
+          <label class="switch">
             <input id="remove-items"
-                   type="checkbox" />
+                   type="checkbox"
+                   role="switch" />
+            <span class="switch-track"
+                  aria-hidden="true"></span>
             Remove held items
           </label>
         </section>
