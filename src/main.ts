@@ -1,6 +1,6 @@
 import './style.css'
 import { convert_spread, total, type Direction } from './convert'
-import { EXTRA_FIELDS, LANGUAGES, OT_GENDERS, extras_to_lines, merge_extras, validate_extras, type ExtraField, type Extras } from './extras'
+import { EXTRA_FIELDS, LANGUAGES, OT_GENDERS, extras_to_lines, merge_extras, validate_extras, type ExtraField, type Extras, type IdFormat } from './extras'
 import { format_spread_line, parse_team, pokepaste_raw_url, serialize_set, type PokemonSet } from './paste'
 
 declare global {
@@ -29,8 +29,8 @@ const FIELD_OPTIONS: Partial<Record<ExtraField, string[]>> = {
 
 const FIELD_PLACEHOLDERS: Partial<Record<ExtraField, string>> = {
   OT: 'Trainer name',
-  TID: '0–65535',
-  SID: '0–65535',
+  TID: 'Trainer ID',
+  SID: 'Secret ID',
   Ball: 'e.g. Poke Ball'
 }
 
@@ -96,9 +96,10 @@ function spread_text(line: string | null, unit: string, amount: number) {
 }
 
 function render() {
-  const errors = validate_extras(team_extras)
+  const id_format = element<HTMLSelectElement>('id-format').value as IdFormat
+  const errors = validate_extras(team_extras, id_format)
   overrides.forEach((override, index) => {
-    validate_extras(override).forEach(error => errors.push(`${team[index].species}: ${error}`))
+    validate_extras(override, id_format).forEach(error => errors.push(`${team[index].species}: ${error}`))
   })
   extras_errors.textContent = errors.join(' ')
 
@@ -159,6 +160,7 @@ function download() {
 
 build_extras_fields(element('team-extras'), team_extras)
 element('import').addEventListener('click', import_team)
+element('id-format').addEventListener('change', render)
 document.querySelectorAll('input[name="direction"]').forEach(radio => radio.addEventListener('change', render))
 element('copy').addEventListener('click', () => navigator.clipboard.writeText(output.value))
 element('download').addEventListener('click', download)

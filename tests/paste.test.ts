@@ -61,8 +61,14 @@ Careful Nature
     expect(extras_to_lines({ OT: '', TID: ' ' })).toEqual([])
   })
 
-  it('validates trainer ids', () => {
-    expect(validate_extras({ TID: '70000', SID: 'abc' })).toHaveLength(2)
-    expect(validate_extras({ TID: '12345' })).toEqual([])
+  it('validates Gen 7+ trainer ids (6-digit TID, 4-digit SID) by default', () => {
+    expect(validate_extras({ TID: '123456', SID: '4294' })).toEqual([])
+    expect(validate_extras({ TID: '1000000', SID: '4295' })).toHaveLength(2)
+    expect(validate_extras({ SID: 'abc' })).toHaveLength(1)
+  })
+
+  it('validates Gen 3-6 trainer ids as 0-65535', () => {
+    expect(validate_extras({ TID: '65535', SID: '12345' }, 'gen3')).toEqual([])
+    expect(validate_extras({ TID: '123456' }, 'gen3')).toHaveLength(1)
   })
 })

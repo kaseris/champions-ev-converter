@@ -46,6 +46,11 @@
       <section>
         <details>
           <summary>3. Trainer details (optional, applies to every Pokémon)</summary>
+          <label for="id-format">ID format</label>
+          <select id="id-format">
+            <option value="gen7">Gen 7+ (SM, SwSh, BDSP, PLA, SV) – 6-digit TID, 4-digit SID</option>
+            <option value="gen3">Gen 3–6 – TID/SID 0–65535</option>
+          </select>
           <div id="team-extras"
                class="extras"></div>
           <p id="extras-errors"
