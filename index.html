@@ -6,13 +6,70 @@
           content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://play.pokemonshowdown.com; connect-src 'self' https://pokepast.es ws://localhost:5173" />
-    <title>Champions EV Converter</title>
-    <script type="module" crossorigin src="./assets/index-YTXUrzXD.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CNqIescB.css">
+    <title>Pokémon Champions EV Converter – Stat Points (SP) to EVs and Back</title>
+    <meta name="description"
+          content="Free Pokémon Champions EV converter: turn stat points (SP) into EVs and back, import Pokepaste teams, fix the 510 EV limit and export for PKHeX." />
+    <link rel="canonical"
+          href="https://kaseris.github.io/champions-ev-converter/" />
+    <meta name="robots"
+          content="index, follow" />
+    <meta property="og:type"
+          content="website" />
+    <meta property="og:title"
+          content="Pokémon Champions EV Converter" />
+    <meta property="og:description"
+          content="Convert Pokémon Champions stat points to EVs and EVs to stat points. Import a Pokepaste, export Showdown or PKHeX-ready text." />
+    <meta property="og:url"
+          content="https://kaseris.github.io/champions-ev-converter/" />
+    <meta name="twitter:card"
+          content="summary" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebApplication",
+            "name": "Pokémon Champions EV Converter",
+            "url": "https://kaseris.github.io/champions-ev-converter/",
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Any",
+            "browserRequirements": "Requires JavaScript",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "description": "Convert Pokémon Champions stat points (SP) to regular EVs and back, import Pokepaste teams and export Showdown text with PKHeX Auto-Legality Mod trainer fields."
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How do Pokémon Champions stat points convert to EVs?",
+                "acceptedAnswer": { "@type": "Answer", "text": "At level 50 one stat point equals one stat point in-game. The first SP in a stat is 4 EVs and every next SP is 8 EVs, so 32 SP is 252 EVs and 1 SP is 4 EVs." }
+              },
+              {
+                "@type": "Question",
+                "name": "Why does a Champions spread go over the 510 EV limit?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Champions gives 66 stat points. Spread over four or fewer stats that becomes 512 to 516 EVs, more than the 510 regular games allow. The converter warns and trims the lowest stat." }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I convert regular EVs to Champions stat points?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Choose Regular EVs → Champions SP and paste your team. Each stat becomes (EVs + 4) / 8 rounded down, up to 32 SP per stat and 66 in total." }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <script type="module" crossorigin src="./assets/index-DD9NDiTn.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Cd422nnn.css">
   </head>
   <body>
     <main>
-      <h1>Champions EV Converter</h1>
+      <h1>Pokémon Champions EV Converter</h1>
+      <p class="intro">
+        Convert Pokémon Champions stat points (SP) to regular EVs, or regular EVs to Champions SP.
+        Paste a team or a Pokepaste link, then copy the converted Showdown text.
+      </p>
 
       <div class="workspace">
         <section class="panel">
@@ -124,6 +181,35 @@
           <p id="extras-errors"
              class="error"></p>
         </details>
+      </section>
+      <section class="about">
+        <h2>How the Champions SP to EV conversion works</h2>
+        <h3>Stat points to EVs</h3>
+        <p>
+          At level 50 one Champions stat point adds one point to the stat. In the regular games the first
+          point in a stat costs 4 EVs and each one after that costs 8, so 1 SP = 4 EVs, 2 SP = 12 EVs and
+          32 SP = 252 EVs.
+        </p>
+        <h3>Why 66 stat points can exceed the 510 EV limit</h3>
+        <p>
+          Champions gives every Pokémon 66 stat points. Put into four or fewer stats, they come out as
+          512 to 516 EVs, which is over the 510 EV cap of Scarlet/Violet and earlier games. The converter
+          warns you and trims the lowest invested stat so the spread stays legal.
+        </p>
+        <h3>EVs to stat points</h3>
+        <p>
+          Going the other way, each stat becomes (EVs + 4) ÷ 8 rounded down, capped at 32 SP per stat and
+          66 SP total. EVs that don't land on a full stat point are flagged.
+        </p>
+        <h3>Trainer details for PKHeX</h3>
+        <p>
+          Optional OT, TID, SID, language, ball and shiny settings are written as Auto-Legality Mod lines
+          so the exported team can be imported into PKHeX.
+        </p>
+        <p class="muted">
+          Fan-made tool, not affiliated with Nintendo, Game Freak or The Pokémon Company.
+          Sprites are loaded from Pokémon Showdown.
+        </p>
       </section>
     </main>
   </body>
