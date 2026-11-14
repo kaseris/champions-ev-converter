@@ -105,6 +105,7 @@ function render() {
 
   const dir = direction()
   const unit = units(dir)
+  const remove_items = element<HTMLInputElement>('remove-items').checked
   const sets = team.map((set, index) => {
     const result = convert_spread(set.spread, dir)
     const cells = team_rows.rows[index].cells
@@ -117,7 +118,8 @@ function render() {
       return line
     }))
     if (!result.warnings.length) cells[3].textContent = 'OK'
-    return serialize_set(set, result.spread, extras_to_lines(merge_extras(team_extras, overrides[index])))
+    const extra_lines = extras_to_lines(merge_extras(team_extras, overrides[index]))
+    return serialize_set(set, result.spread, extra_lines, remove_items)
   })
   output.value = sets.join('\n\n')
 }
@@ -161,6 +163,7 @@ function download() {
 build_extras_fields(element('team-extras'), team_extras)
 element('import').addEventListener('click', import_team)
 element('id-format').addEventListener('change', render)
+element('remove-items').addEventListener('change', render)
 document.querySelectorAll('input[name="direction"]').forEach(radio => radio.addEventListener('change', render))
 element('copy').addEventListener('click', () => navigator.clipboard.writeText(output.value))
 element('download').addEventListener('click', download)

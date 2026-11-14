@@ -57,6 +57,13 @@ Careful Nature
 - Knock Off`)
   })
 
+  it('removes held items when asked, keeping nickname and gender', () => {
+    const [, chomp] = parse_team(TEAM)
+    const text = serialize_set(chomp, chomp.spread, [], true)
+    expect(text.split('\n')[0]).toBe('Chompy (Garchomp) (F)')
+    expect(serialize_set(chomp, chomp.spread, []).split('\n')[0]).toBe('Chompy (Garchomp) (F) @ Life Orb')
+  })
+
   it('omits empty extras', () => {
     expect(extras_to_lines({ OT: '', TID: ' ' })).toEqual([])
   })

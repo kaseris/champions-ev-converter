@@ -62,13 +62,18 @@ export function parse_team(text: string): PokemonSet[] {
     })
 }
 
+export function strip_item(header: string): string {
+  return header.split(' @ ')[0].trim()
+}
+
 // Rebuilds a set in Showdown order: header, Ability/Level/etc, extras, EVs, the rest (nature, IVs, moves)
-export function serialize_set(set: PokemonSet, spread: Spread, extra_lines: string[]): string {
+export function serialize_set(set: PokemonSet, spread: Spread, extra_lines: string[], remove_item = false): string {
   const extra_keys = new Set(extra_lines.map(line => line.split(':')[0].toLowerCase()))
   const kept = set.lines.filter(line => !extra_keys.has(line.split(':')[0].toLowerCase()))
   const split_at = kept.findIndex(line => /Nature$/i.test(line) || /^IVs:/i.test(line) || line.startsWith('-'))
   const head = split_at === -1 ? kept : kept.slice(0, split_at)
   const tail = split_at === -1 ? [] : kept.slice(split_at)
   const ev_line = format_spread_line(spread)
-  return [set.header, ...head, ...extra_lines, ...(ev_line ? [ev_line] : []), ...tail].join('\n')
+  const header = remove_item ? strip_item(set.header) : set.header
+  return [header, ...head, ...extra_lines, ...(ev_line ? [ev_line] : []), ...tail].join('\n')
 }
