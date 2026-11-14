@@ -280,6 +280,29 @@ async function import_team() {
   render()
 }
 
+function clear_app() {
+  source_input.value = ''
+  import_status.textContent = ''
+  team = []
+  overrides = []
+  imported_spreads = []
+  spread_editors = []
+  mon_rows = []
+  strip_sprites = []
+  row_sprites = []
+  for (const field of EXTRA_FIELDS) delete team_extras[field]
+  build_extras_fields(element('team-extras'), team_extras)
+  document.querySelector<HTMLInputElement>('input[name="direction"][value="champions_to_regular"]')!.checked = true
+  element<HTMLInputElement>('remove-items').checked = false
+  document.querySelectorAll('details').forEach(details => (details.open = false))
+  build_rows()
+  const id_format = element<HTMLSelectElement>('id-format')
+  id_format.value = 'gen7'
+  // Fires render() and refreshes the custom dropdown label
+  id_format.dispatchEvent(new Event('change'))
+  source_input.focus()
+}
+
 function download() {
   const blob = new Blob([output.value], { type: 'text/plain' })
   const link = document.createElement('a')
@@ -292,6 +315,7 @@ function download() {
 build_extras_fields(element('team-extras'), team_extras)
 enhance_select(element('id-format'))
 element('import').addEventListener('click', import_team)
+element('clear').addEventListener('click', clear_app)
 element('id-format').addEventListener('change', render)
 element('remove-items').addEventListener('change', render)
 document.querySelectorAll('input[name="direction"]').forEach(radio => radio.addEventListener('change', render))

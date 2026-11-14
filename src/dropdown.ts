@@ -155,5 +155,8 @@ export function enhance_select(select: HTMLSelectElement): void {
     }
   })
 
+  // Keeps the button text right when the value is changed in code (e.g. when the app is cleared)
+  select.addEventListener('change', sync)
+
   sync()
 }
