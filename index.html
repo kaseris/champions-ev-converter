@@ -12,49 +12,99 @@
     <main>
       <h1>Champions EV Converter</h1>
 
-      <section>
-        <h2>1. Import team</h2>
-        <label for="source">Pokepaste URL or paste text</label>
-        <textarea id="source"
-                  rows="10"
-                  placeholder="https://pokepast.es/... or Showdown text"></textarea>
-        <button id="import"
-                type="button">
-          Import
-        </button>
-        <p id="import-status"
-           role="status"></p>
-      </section>
+      <div class="workspace">
+        <section class="panel">
+          <h2>
+            <label for="source">Import</label>
+          </h2>
+          <textarea id="source"
+                    rows="18"
+                    placeholder="https://pokepast.es/... or paste Showdown text"></textarea>
+          <div class="actions">
+            <button id="import"
+                    type="button"
+                    class="primary">
+              Import
+            </button>
+            <span id="import-status"
+                  role="status"></span>
+          </div>
+
+          <fieldset>
+            <legend>Paste uses</legend>
+            <label>
+              <input type="radio"
+                     name="direction"
+                     value="champions_to_regular"
+                     checked />
+              Champions stat points → convert to regular EVs
+            </label>
+            <label>
+              <input type="radio"
+                     name="direction"
+                     value="regular_to_champions" />
+              Regular EVs → convert to Champions stat points
+            </label>
+          </fieldset>
+
+          <label>
+            <input id="remove-items"
+                   type="checkbox" />
+            Remove held items
+          </label>
+        </section>
+
+        <section class="panel">
+          <h2>
+            <label for="output">Export</label>
+            <span id="output-unit"
+                  class="muted">Regular EVs</span>
+          </h2>
+          <textarea id="output"
+                    rows="18"
+                    readonly
+                    placeholder="Converted team appears here"></textarea>
+          <div class="actions">
+            <button id="copy"
+                    type="button"
+                    class="primary">
+              Copy
+            </button>
+            <button id="download"
+                    type="button">
+              Download .txt
+            </button>
+          </div>
+          <p id="output-notes"
+             class="warning"
+             role="status"></p>
+        </section>
+      </div>
 
       <section>
-        <h2>2. Spread type</h2>
-        <label>
-          <input type="radio"
-                 name="direction"
-                 value="champions_to_regular"
-                 checked />
-          Paste uses Champions stat points → convert to regular EVs
-        </label>
-        <label>
-          <input type="radio"
-                 name="direction"
-                 value="regular_to_champions" />
-          Paste uses regular EVs → convert to Champions stat points
-        </label>
-      </section>
-
-      <section>
-        <h2>3. Options</h2>
-        <label>
-          <input id="remove-items"
-                 type="checkbox" />
-          Remove held items from the output
-        </label>
+        <h2>Team</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Pokémon</th>
+                <th>Original</th>
+                <th>Converted</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="team-rows">
+              <tr>
+                <td colspan="4">No team imported yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section>
         <details>
-          <summary>4. Trainer details (optional, applies to every Pokémon)</summary>
+          <summary>Trainer details (optional, applies to every Pokémon)</summary>
           <label for="id-format">ID format</label>
           <select id="id-format">
             <option value="gen7">Gen 7+ (SM, SwSh, BDSP, PLA, SV) – 6-digit TID, 4-digit SID</option>
@@ -65,40 +115,6 @@
           <p id="extras-errors"
              class="error"></p>
         </details>
-      </section>
-
-      <section>
-        <h2>5. Team</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Pokémon</th>
-              <th>Original</th>
-              <th>Converted</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody id="team-rows">
-            <tr>
-              <td colspan="4">No team imported yet.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section>
-        <h2>6. Output</h2>
-        <textarea id="output"
-                  rows="16"
-                  readonly></textarea>
-        <button id="copy"
-                type="button">
-          Copy
-        </button>
-        <button id="download"
-                type="button">
-          Download .txt
-        </button>
       </section>
     </main>
     <script type="module" src="/src/main.ts"></script>

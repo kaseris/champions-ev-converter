@@ -106,6 +106,8 @@ function render() {
   const dir = direction()
   const unit = units(dir)
   const remove_items = element<HTMLInputElement>('remove-items').checked
+  element('output-unit').textContent = dir === 'champions_to_regular' ? 'Regular EVs' : 'Champions SP'
+  let flagged = 0
   const sets = team.map((set, index) => {
     const result = convert_spread(set.spread, dir)
     const cells = team_rows.rows[index].cells
@@ -118,10 +120,14 @@ function render() {
       return line
     }))
     if (!result.warnings.length) cells[3].textContent = 'OK'
+    if (result.warnings.length) flagged++
     const extra_lines = extras_to_lines(merge_extras(team_extras, overrides[index]))
     return serialize_set(set, result.spread, extra_lines, remove_items)
   })
   output.value = sets.join('\n\n')
+  element('output-notes').textContent = flagged
+    ? `⚠ ${flagged} of ${team.length} Pokémon were adjusted. See the notes in the Team table below.`
+    : ''
 }
 
 async function fetch_text(url: string): Promise<string> {
@@ -165,5 +171,15 @@ element('import').addEventListener('click', import_team)
 element('id-format').addEventListener('change', render)
 element('remove-items').addEventListener('change', render)
 document.querySelectorAll('input[name="direction"]').forEach(radio => radio.addEventListener('change', render))
-element('copy').addEventListener('click', () => navigator.clipboard.writeText(output.value))
+element('copy').addEventListener('click', async event => {
+  const button = event.currentTarget as HTMLButtonElement
+  await navigator.clipboard.writeText(output.value)
+  button.textContent = 'Copied'
+  setTimeout(() => (button.textContent = 'Copy'), 1500)
+})
+// Pasting a team or URL imports it right away; Cmd/Ctrl+Enter re-imports after edits
+source_input.addEventListener('paste', () => setTimeout(import_team))
+source_input.addEventListener('keydown', event => {
+  if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) import_team()
+})
 element('download').addEventListener('click', download)
