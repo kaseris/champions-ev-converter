@@ -5,6 +5,7 @@ export interface PokemonSet {
   species: string
   lines: string[]
   spread: Spread
+  ev_line: string | null
 }
 
 const STAT_ALIASES: Record<string, Stat> = {
@@ -40,6 +41,15 @@ export function parse_spread_line(line: string): Spread {
   return spread
 }
 
+// Parts of an EVs/IVs line that aren't "<number> <stat>", e.g. "32 Speed"
+export function invalid_spread_parts(line: string): string[] {
+  return line
+    .replace(/^(EVs|IVs):/i, '')
+    .split('/')
+    .map(part => part.trim())
+    .filter(part => part && !/^\d+\s+(hp|atk|def|spa|spd|spe)$/i.test(part))
+}
+
 export function format_spread_line(spread: Spread): string | null {
   const parts = STATS.filter(stat => spread[stat] > 0).map(stat => `${spread[stat]} ${stat}`)
   return parts.length ? `EVs: ${parts.join(' / ')}` : null
@@ -57,7 +67,8 @@ export function parse_team(text: string): PokemonSet[] {
         header,
         species: parse_species(header),
         lines: lines.filter(line => !EV_LINE.test(line)),
-        spread: ev_line ? parse_spread_line(ev_line) : empty_spread()
+        spread: ev_line ? parse_spread_line(ev_line) : empty_spread(),
+        ev_line: ev_line ?? null
       }
     })
 }

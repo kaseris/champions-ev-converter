@@ -23,6 +23,11 @@ function result(spread: Spread, warnings: string[], errors: string[]): Conversio
   return { spread, warnings, errors, status }
 }
 
+// Adds checks from outside the converter (e.g. paste validation) and recomputes the status
+export function with_notes(base: ConversionResult, extra: { errors: string[]; warnings: string[] }): ConversionResult {
+  return result(base.spread, [...extra.warnings, ...base.warnings], [...extra.errors, ...base.errors])
+}
+
 export function empty_spread(): Spread {
   return { HP: 0, Atk: 0, Def: 0, SpA: 0, SpD: 0, Spe: 0 }
 }

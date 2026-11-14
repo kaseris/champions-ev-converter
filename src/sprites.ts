@@ -3,7 +3,7 @@ const SPRITE_HOST = 'https://play.pokemonshowdown.com/sprites'
 // Species whose hyphen belongs to the base name, not a forme (Showdown drops it entirely)
 const HYPHENATED_BASES = ['ho-oh', 'porygon-z', 'jangmo-o', 'hakamo-o', 'kommo-o', 'ting-lu', 'chien-pao', 'wo-chien', 'chi-yu', 'nidoran-f', 'nidoran-m']
 
-function to_id(text: string): string {
+export function to_id(text: string): string {
   return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
