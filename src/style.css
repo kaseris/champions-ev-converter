@@ -525,6 +525,13 @@ td {
   }
 }
 
+.options {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .switch {
   position: relative;
   display: inline-flex;

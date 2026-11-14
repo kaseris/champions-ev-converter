@@ -112,14 +112,25 @@
             </div>
           </fieldset>
 
-          <label class="switch">
-            <input id="remove-items"
-                   type="checkbox"
-                   role="switch" />
-            <span class="switch-track"
-                  aria-hidden="true"></span>
-            Remove held items
-          </label>
+          <div class="options">
+            <label class="switch">
+              <input id="remove-items"
+                     type="checkbox"
+                     role="switch" />
+              <span class="switch-track"
+                    aria-hidden="true"></span>
+              Remove held items
+            </label>
+            <label class="switch">
+              <input id="include-extras"
+                     type="checkbox"
+                     role="switch"
+                     checked />
+              <span class="switch-track"
+                    aria-hidden="true"></span>
+              Include trainer details in export
+            </label>
+          </div>
         </section>
 
         <section class="panel">
@@ -171,7 +182,7 @@
       </section>
 
       <section>
-        <details>
+        <details id="trainer-details">
           <summary>Trainer details (optional, applies to every Pokémon)</summary>
           <label for="id-format">ID format</label>
           <select id="id-format">

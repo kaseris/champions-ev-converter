@@ -1,6 +1,6 @@
 import './style.css'
 import { MAX_EV_PER_STAT, MAX_EV_TOTAL, MAX_SP_PER_STAT, MAX_SP_TOTAL, STATS, convert_spread, total, with_notes, type ConversionResult, type Direction, type Spread, type Stat } from './convert'
-import { EXTRA_FIELDS, LANGUAGES, OT_GENDERS, extras_to_lines, is_shiny, merge_extras, validate_extras, type ExtraField, type Extras, type IdFormat } from './extras'
+import { EXTRA_FIELDS, LANGUAGES, OT_GENDERS, extract_extras, extras_to_lines, is_shiny, split_common, merge_extras, validate_extras, type ExtraField, type Extras, type IdFormat } from './extras'
 import { load_dex, load_learnsets, type Dex, type Learnsets } from './dex'
 import { enhance_select } from './dropdown'
 import { set_sprite, sprite_image } from './sprites'
@@ -60,6 +60,9 @@ function build_extras_fields(container: HTMLElement, target: Extras, placeholder
     const input = options ? document.createElement('select') : document.createElement('input')
     if (input instanceof HTMLSelectElement) {
       input.append(new Option(placeholder_prefix ? 'Team default' : '—', ''), ...options!.map(value => new Option(value)))
+      // Imported values outside the usual list (e.g. a language code) still need to be selectable
+      const current = target[field]
+      if (current && !options!.includes(current)) input.append(new Option(current))
     } else {
       input.type = 'text'
       input.placeholder = placeholder_prefix || FIELD_PLACEHOLDERS[field] || ''
@@ -170,6 +173,11 @@ function build_rows() {
     override_cell.colSpan = 4
     override_cell.append(fields)
     details.addEventListener('toggle', () => (override_row.hidden = !details.open))
+    // Show imported per-Pokémon trainer details straight away
+    if (Object.values(overrides[index]).some(Boolean)) {
+      details.open = true
+      override_row.hidden = false
+    }
   })
 }
 
@@ -241,7 +249,7 @@ function render() {
     const shiny = is_shiny(extras, set.lines)
     set_sprite(strip_sprites[index], set.species, shiny)
     set_sprite(row_sprites[index], set.species, shiny)
-    const extra_lines = extras_to_lines(extras)
+    const extra_lines = element<HTMLInputElement>('include-extras').checked ? extras_to_lines(extras) : []
     return serialize_set(set, result.spread, extra_lines, remove_items)
   })
   output.value = sets.join('\n\n')
@@ -287,6 +295,26 @@ function ensure_dex() {
   }
 }
 
+// Moves trainer-detail lines from the paste into the fields: shared values fill the team-wide section,
+// differing ones become per-Pokémon overrides. Returns the overrides.
+function apply_imported_extras(sets: PokemonSet[]): Extras[] {
+  const per_mon = sets.map(set => {
+    const { extras, rest } = extract_extras(set.lines)
+    set.lines = rest
+    return extras
+  })
+  const { team: common, overrides: per_mon_overrides } = split_common(per_mon)
+  const imported_fields = EXTRA_FIELDS.filter(field => per_mon.some(extras => extras[field]))
+  if (!imported_fields.length) return per_mon_overrides
+  for (const field of imported_fields) {
+    if (common[field]) team_extras[field] = common[field]
+    else delete team_extras[field]
+  }
+  build_extras_fields(element('team-extras'), team_extras)
+  element<HTMLDetailsElement>('trainer-details').open = true
+  return per_mon_overrides
+}
+
 async function import_team() {
   const input = source_input.value.trim()
   const raw_url = pokepaste_raw_url(input)
@@ -301,7 +329,7 @@ async function import_team() {
     }
   }
   team = parse_team(text)
-  overrides = team.map(() => ({}))
+  overrides = apply_imported_extras(team)
   imported_spreads = team.map(set => ({ ...set.spread }))
   import_status.textContent = team.length ? `Imported ${team.length} Pokémon.` : 'No Pokémon found in the input.'
   build_rows()
@@ -323,6 +351,7 @@ function clear_app() {
   build_extras_fields(element('team-extras'), team_extras)
   document.querySelector<HTMLInputElement>('input[name="direction"][value="champions_to_regular"]')!.checked = true
   element<HTMLInputElement>('remove-items').checked = false
+  element<HTMLInputElement>('include-extras').checked = true
   document.querySelectorAll('details').forEach(details => (details.open = false))
   build_rows()
   const id_format = element<HTMLSelectElement>('id-format')
@@ -347,6 +376,7 @@ element('import').addEventListener('click', import_team)
 element('clear').addEventListener('click', clear_app)
 element('id-format').addEventListener('change', render)
 element('remove-items').addEventListener('change', render)
+element('include-extras').addEventListener('change', render)
 document.querySelectorAll('input[name="direction"]').forEach(radio => radio.addEventListener('change', render))
 element('copy').addEventListener('click', async event => {
   const button = event.currentTarget as HTMLButtonElement

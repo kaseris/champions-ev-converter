@@ -48,3 +48,43 @@ export function validate_extras(extras: Extras, id_format: IdFormat = 'gen7'): s
 export function is_shiny(extras: Extras, set_lines: string[]): boolean {
   return extras.Shiny?.trim().toLowerCase() === 'yes' || set_lines.some(line => /^shiny:\s*yes$/i.test(line))
 }
+
+const FIELD_CHOICES: Partial<Record<ExtraField, string[]>> = {
+  OTGender: OT_GENDERS,
+  Language: LANGUAGES,
+  Shiny: ['Yes']
+}
+
+// Pulls trainer-detail lines (OT, TID, Shiny, ...) out of a set so the fields own them from then on
+export function extract_extras(lines: string[]): { extras: Extras; rest: string[] } {
+  const extras: Extras = {}
+  const rest: string[] = []
+  for (const line of lines) {
+    const match = line.match(/^([^:]+):\s*(.*)$/)
+    const field = match && EXTRA_FIELDS.find(name => name.toLowerCase() === match[1].trim().toLowerCase())
+    if (!field) {
+      rest.push(line)
+      continue
+    }
+    const value = match[2].trim()
+    const choice = FIELD_CHOICES[field]?.find(option => option.toLowerCase() === value.toLowerCase())
+    // "Shiny: No" means not shiny, which is the default, so it's dropped
+    if (field === 'Shiny' && !choice) continue
+    if (value) extras[field] = choice ?? value
+  }
+  return { extras, rest }
+}
+
+// Values every Pokémon shares go to the team-wide fields; the rest stay as per-Pokémon overrides
+export function split_common(per_mon: Extras[]): { team: Extras; overrides: Extras[] } {
+  const team: Extras = {}
+  const overrides = per_mon.map(extras => ({ ...extras }))
+  for (const field of EXTRA_FIELDS) {
+    const first = per_mon[0]?.[field]
+    if (first && per_mon.every(extras => extras[field] === first)) {
+      team[field] = first
+      for (const override of overrides) delete override[field]
+    }
+  }
+  return { team, overrides }
+}
