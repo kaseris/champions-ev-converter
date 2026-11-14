@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://pokepast.es ws://localhost:5173" />
+    <title>Champions EV Converter</title>
+  </head>
+  <body>
+    <main>
+      <h1>Champions EV Converter</h1>
+
+      <section>
+        <h2>1. Import team</h2>
+        <label for="source">Pokepaste URL or paste text</label>
+        <textarea id="source"
+                  rows="10"
+                  placeholder="https://pokepast.es/... or Showdown text"></textarea>
+        <button id="import"
+                type="button">
+          Import
+        </button>
+        <p id="import-status"
+           role="status"></p>
+      </section>
+
+      <section>
+        <h2>2. Spread type</h2>
+        <label>
+          <input type="radio"
+                 name="direction"
+                 value="champions_to_regular"
+                 checked />
+          Paste uses Champions stat points → convert to regular EVs
+        </label>
+        <label>
+          <input type="radio"
+                 name="direction"
+                 value="regular_to_champions" />
+          Paste uses regular EVs → convert to Champions stat points
+        </label>
+      </section>
+
+      <section>
+        <details>
+          <summary>3. Trainer details (optional, applies to every Pokémon)</summary>
+          <div id="team-extras"
+               class="extras"></div>
+          <p id="extras-errors"
+             class="error"></p>
+        </details>
+      </section>
+
+      <section>
+        <h2>4. Team</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Pokémon</th>
+              <th>Original</th>
+              <th>Converted</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="team-rows">
+            <tr>
+              <td colspan="4">No team imported yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>5. Output</h2>
+        <textarea id="output"
+                  rows="16"
+                  readonly></textarea>
+        <button id="copy"
+                type="button">
+          Copy
+        </button>
+        <button id="download"
+                type="button">
+          Download .txt
+        </button>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
